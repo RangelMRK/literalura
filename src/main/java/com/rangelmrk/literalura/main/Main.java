@@ -6,10 +6,7 @@ import com.rangelmrk.literalura.repository.LivroRepository;
 import com.rangelmrk.literalura.service.ConsumoAPI;
 import com.rangelmrk.literalura.service.ConverteDados;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -32,13 +29,18 @@ public class Main {
 
 
         String menu = """
+                \n
                 1 - Buscar Livro pelo título
                 2 - Listar Livros Registrados
                 3 - Listar Autores Registrados
                 4 - Listar Autores vivos em um determinado ano
                 5 - Listar Livros em um determinado Idioma
+                6 - Listar top10 Livros mais Baixados
+                7 - Buscar Autores Registrados por Trecho do Nome               
+                8 - Exibir estatísticas de Downloads
                                 
-                0 - Sair                                 
+                0 - Sair
+                \n                                 
                 """;
 
 
@@ -65,17 +67,29 @@ public class Main {
                     case 5:
                         listarLivrosPorIdioma();
                         break;
+                    case 6:
+                        listarTop10MaisBaixados();
+                        break;
+                    case 7:
+                        buscarAutorPorNome();
+                        break;
+                    case 8:
+                        exibirEstatisticasDownloads();
+                        break;
                     case 0:
                         System.out.println("Saindo...");
                         break;
                     default:
                         System.out.println("Opção inválida");
                 }
-            }catch (NumberFormatException e) {
-                System.out.println("Entada inválida. Por favor, digite um número!");
+            }catch (InputMismatchException e){
+                System.out.println("Entrada inválida. Por favor, digite um número!");
+                input.nextLine();
             }
         }
     }
+
+
 
     private Optional<DadosLivro> getDadosLivro(){
         System.out.println("Digite o Título do Livro que deseja buscar: ");
@@ -102,7 +116,7 @@ public class Main {
 
 
     private void exibeInfoLivro(Livro livro){
-        System.out.println("Título: " + livro.getTitulo());
+        System.out.println("\nTítulo: " + livro.getTitulo());
         System.out.println("Autor: " + livro.getAutor().getNome());
         System.out.println("Idioma: " + String.join(", ", livro.getIdioma()));
         System.out.println("Downloads: " + livro.getDownloads());
@@ -110,7 +124,7 @@ public class Main {
     }
 
     private void exibeInfoAutor(Autor autor){
-        System.out.println("Autor: " + autor.getNome());
+        System.out.println("\nAutor: " + autor.getNome());
         System.out.println("Ano de Nascimento: " + autor.getAnoNascimento());
         System.out.println("Ano de Falecimento: " + autor.getAnoFalecimento());
 
@@ -149,14 +163,19 @@ public class Main {
     }
 
     private void listarLivrosRegistrados() {
-        List<Livro> livrosRegistrados = repositorioLivro.findAll();
+        List<Livro> livrosRegistrados = repositorioLivro.findAll().stream()
+                .sorted(Comparator.comparing(Livro::getTitulo))
+                .toList();
 
         livrosRegistrados.forEach(l -> exibeInfoLivro(l));
 
     }
 
     private void listarAutoresRegistrados() {
-        List<Autor> autoresRegistrados = repositorioAutor.findAll();
+        List<Autor> autoresRegistrados = repositorioAutor.findAll().stream()
+                .sorted(Comparator.comparing(Autor::getNome))
+                .toList();
+
         autoresRegistrados.forEach(a -> exibeInfoAutor(a));
 
     }
@@ -166,7 +185,9 @@ public class Main {
         var anoBusca = input.nextInt();
         input.nextLine();
 
-        List<Autor> vivoAno = repositorioAutor.vivosEmAno(anoBusca);
+        List<Autor> vivoAno = repositorioAutor.vivosEmAno(anoBusca).stream()
+                .sorted(Comparator.comparing(Autor::getNome))
+                .toList();
 
         if(vivoAno.isEmpty()) {
             System.out.println("Não há autores no banco de Dados que estavam vivos em " + anoBusca);
@@ -188,7 +209,9 @@ public class Main {
         System.out.println("Digite a sigla do idioma que deseja exibir os livros");
         var escolhaIdioma = input.nextLine();
 
-        List<Livro> listaLivros = repositorioLivro.findByIdioma(escolhaIdioma);
+        List<Livro> listaLivros = repositorioLivro.findByIdioma(escolhaIdioma).stream()
+                .sorted(Comparator.comparing(Livro::getTitulo))
+                .toList();
 
         if(listaLivros.isEmpty()){
             System.out.println("Não foram encontrados Livros para este idioma: " + escolhaIdioma);
@@ -196,5 +219,54 @@ public class Main {
             listaLivros.forEach(l -> exibeInfoLivro(l));
         }
 
+    }
+
+    private void listarTop10MaisBaixados() {
+        List<Livro> listatLivros = repositorioLivro.findTop10ByOrderByDownloadsDesc().stream()
+                .sorted(Comparator.comparing(Livro::getTitulo))
+                .toList();
+
+        if (listatLivros.isEmpty()){
+            System.out.println("Não foram encontrados livros registrados!");
+        } else {
+            listatLivros.forEach(l -> exibeInfoLivro(l));
+        }
+    }
+
+    private void buscarAutorPorNome() {
+        System.out.println("Digite o trecho do nome do autor que deseja Buscar");
+        var trechoNome = input.nextLine();
+        List<Autor> listaAutor = repositorioAutor.buscaPorNome(trechoNome);
+
+        if (listaAutor.isEmpty()){
+            System.out.println("Nenhum Autor encontrado!");
+        } else {
+            listaAutor.forEach( a -> exibeInfoAutor(a));
+        }
+    }
+
+
+
+    private void exibirEstatisticasDownloads() {
+
+        List<Livro> livros = repositorioLivro.findAll();
+
+        if (livros.isEmpty()) {
+            System.out.println("Nenhum livro registrado para calcular estatísticas.");
+            return;
+        }
+
+
+        DoubleSummaryStatistics stats = livros.stream()
+                .mapToDouble(Livro::getDownloads)
+                .summaryStatistics();
+
+
+        System.out.println("Estatísticas dos Downloads dos Livros:");
+        System.out.println("Quantidade de Livros: " + stats.getCount());
+        System.out.println("Total de Downloads: " + stats.getSum());
+        System.out.println("Média de Downloads: " + stats.getAverage());
+        System.out.println("Máximo de Downloads: " + stats.getMax());
+        System.out.println("Mínimo de Downloads: " + stats.getMin());
     }
 }

@@ -12,4 +12,7 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
 
     @Query("SELECT a FROM Autor a WHERE :anoBusca BETWEEN a.anoNascimento AND a.anoFalecimento")
     List<Autor> vivosEmAno(Integer anoBusca);
+
+    @Query("SELECT a FROM Autor a WHERE a.nome ILIKE %:trechoNome%")
+    List<Autor> buscaPorNome(String trechoNome);
 }
