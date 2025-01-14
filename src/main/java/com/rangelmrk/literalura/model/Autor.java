@@ -24,18 +24,11 @@ public class Autor {
     public Autor(){}
 
     public Autor(DadosAutor dadosAutor){
-        this.nome = formatarNome(dadosAutor.nome());
+        this.nome = dadosAutor.nome();
         this.anoNascimento = dadosAutor.anoNascimento();
         this.anoFalecimento = dadosAutor.anoMorte();
     }
 
-    private String formatarNome(String nome) {
-        if (nome.contains(",")) {
-            String[] partes = nome.split(",", 2);
-            return partes[1].trim() + " " + partes[0].trim();
-        }
-        return nome;
-    }
 
     public Long getId() {
         return id;

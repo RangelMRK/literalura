@@ -113,18 +113,24 @@ public class Main {
     }
 
 
-
+    private String formatarNome(String nome) {
+        if (nome.contains(",")) {
+            String[] partes = nome.split(",", 2);
+            return partes[1].trim() + " " + partes[0].trim();
+        }
+        return nome;
+    }
 
     private void exibeInfoLivro(Livro livro){
         System.out.println("\nTítulo: " + livro.getTitulo());
-        System.out.println("Autor: " + livro.getAutor().getNome());
+        System.out.println("Autor: " + formatarNome(livro.getAutor().getNome()));
         System.out.println("Idioma: " + String.join(", ", livro.getIdioma()));
         System.out.println("Downloads: " + livro.getDownloads());
 
     }
 
     private void exibeInfoAutor(Autor autor){
-        System.out.println("\nAutor: " + autor.getNome());
+        System.out.println("\nAutor: " + formatarNome(autor.getNome()));
         System.out.println("Ano de Nascimento: " + autor.getAnoNascimento());
         System.out.println("Ano de Falecimento: " + autor.getAnoFalecimento());
 
@@ -167,7 +173,11 @@ public class Main {
                 .sorted(Comparator.comparing(Livro::getTitulo))
                 .toList();
 
+        if (!livrosRegistrados.isEmpty()){
         livrosRegistrados.forEach(l -> exibeInfoLivro(l));
+        } else {
+            System.out.println("Nenhum Livro Registrado!");
+        }
 
     }
 
@@ -223,7 +233,6 @@ public class Main {
 
     private void listarTop10MaisBaixados() {
         List<Livro> listatLivros = repositorioLivro.findTop10ByOrderByDownloadsDesc().stream()
-                .sorted(Comparator.comparing(Livro::getTitulo))
                 .toList();
 
         if (listatLivros.isEmpty()){
